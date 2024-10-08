@@ -1,0 +1,148 @@
+#-------------------------------------------------------------------------------------------------------------------------------#
+# https://docs.opennebula.io/6.8/installation_and_configuration/frontend_installation/opennebula_repository_configuration.html
+
+$ sudo apt-get update && sudo apt-get upgrade -y && sudo apt-get dist-upgrade  -y
+
+
+$ sudo apt-get -y install gnupg wget apt-transport-https
+
+ # as root
+$ wget -q -O- https://downloads.opennebula.io/repo/repo2.key | gpg --dearmor --yes --output /etc/apt/keyrings/opennebula.gpg
+
+$ echo "deb [signed-by=/etc/apt/keyrings/opennebula.gpg] https://downloads.opennebula.io/repo/6.8/Ubuntu/22.04 stable opennebula" > /etc/apt/sources.list.d/opennebula.list
+
+$ apt-get update
+
+$ apt-get -y install opennebula opennebula-sunstone opennebula-fireedge opennebula-gate opennebula-flow opennebula-provision
+
+$ sudo oneuser show
+     zadmin@ZerCloudOpenNebula:~$ sudo oneuser show
+     Failed to open TCP connection to localhost:2633 (Connection refused - connect(2) for "localhost" port 2633)
+$ systemctl enable opennebula opennebula-sunstone opennebula-fireedge opennebula-gate opennebula-flow
+
+$ sudo oneuser show
+  # Hala hata alıyoruz bakıcaz
+  
+$ su - oneadmin
+
+$ logout
+$ root:// 
+$ passwd oneadmin    # assign password to oneadmin
+$ su - oneadmin   # logout
+$ root://   nano /etc/hosts   #  publicip hostname
+$ su - oneadmin
+$ oneadmin:// ssh-keygen -t rsa    #  creating sshkeys if it is exist , overrite 
+
+$ root@ZerCloudOpenNebula:~# ping ZerCloudOpenNebula
+    PING ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214) 56(84) bytes of data.
+    64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=1 ttl=64 time=0.012 ms
+	64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=2 ttl=64 time=0.023 ms
+	64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=3 ttl=64 time=0.025 ms
+	64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=4 ttl=64 time=0.023 ms
+	64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=5 ttl=64 time=0.025 ms
+	^X64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=6 ttl=64 time=0.025 ms
+	64 bytes from ZerCloudOpenNebula.ip-51-91-116.eu (94.23.152.214): icmp_seq=7 ttl=64 time=0.028 ms
+	^C
+	--- ZerCloudOpenNebula.ip-51-91-116.eu ping statistics ---
+	7 packets transmitted, 7 received, 0% packet loss, time 6143ms
+	rtt min/avg/max/mdev = 0.012/0.023/0.028/0.004 ms
+	
+	
+$ root@ZerCloudOpenNebula:~# sudo su oneadmin
+$ oneadmin@ZerCloudOpenNebula:/root$ ssh-copy-id ZerCloudOpenNebula
+	/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/var/lib/one/.ssh/id_rsa.pub"
+	/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+	/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+	
+$ ssh ZerCloudOpenNebula   # it must be ok
+
+	
+	
+	
+$ systemctl start opennebula opennebula-sunstone opennebula-fireedge opennebula-gate opennebula-flow
+
+$ systemctl enable opennebula opennebula-sunstone opennebula-fireedge opennebula-gate opennebula-flow
+
+
+ # http://server_IP:9869/       Username: oneadmin      Password: password
+
+
+
+
+root@ZerCloudOpenNebula:~# su - oneadmin
+oneadmin@ZerCloudOpenNebula:~$ cat .one/one_auth
+oneadmin:changeme123
+
+
+#-------------------------------------------------------------------------------------------------------------------------------#
+
+
+# Configuring OpenNebula¶
+
+$ sudo -u oneadmin /bin/sh
+
+  #  Create file /var/lib/one/.one/one_auth with initial password in the format oneadmin:<password>
+
+$ echo 'oneadmin:changeme123' > /var/lib/one/.one/one_auth
+
+# you must use the oneuser passwd command to change oneadmin’s password
+
+
+#-------------------------------------------------------------------------------------------------------------------------------#
+
+
+
+
+
+$ oneuser show     # Verifying the Installation
+
+USER 0 INFORMATION
+ID              : 0
+NAME            : oneadmin
+GROUP           : oneadmin
+PASSWORD        : 3bc15c8aae3e4124dd409035f32ea2fd6835efc9
+AUTH_DRIVER     : core
+ENABLED         : Yes
+
+USER TEMPLATE
+TOKEN_PASSWORD="ec21d27e2fe4f9ed08a396cbd47b08b8e0a4ca3c"
+
+RESOURCE USAGE & QUOTAS
+
+
+
+
+systemctl stop opennebula opennebula-scheduler opennebula-hem \
+    opennebula-sunstone opennebula-fireedge opennebula-gate opennebula-flow \
+    opennebula-guacd opennebula-novnc opennebula-showback.timer \
+    opennebula-ssh-agent opennebula-ssh-socks-cleaner.timer
+	
+	
+systemctl try-restart opennebula opennebula-scheduler opennebula-hem \
+    opennebula-sunstone opennebula-fireedge opennebula-gate opennebula-flow \
+    opennebula-guacd opennebula-novnc opennebula-ssh-agent
+
+#-------------------------------------------------------------------------------------------------------------------------------#
+
+# Change credentials for oneadmin or serveradmin¶   restart OpenNebula service.
+
+
+$    oneuser passwd 0 <PASSWORD>
+$   echo 'oneadmin:<PASSWORD>' > /var/lib/one/.one/one_auth
+
+
+In order to change serveradmin credentials you have to do the following in the fontend follow these steps.
+
+        # oneuser passwd 1 --sha256 <PASSWORD>
+        # echo 'serveradmin:PASSWORD' > /var/lib/one/.one/oneflow_auth
+        # echo 'serveradmin:PASSWORD' > /var/lib/one/.one/onegate_auth
+        # echo 'serveradmin:PASSWORD' > /var/lib/one/.one/sunstone_auth
+
+    Restart Sunstone after changing the password.
+
+
+# https://docs.opennebula.io/6.8/management_and_operations/users_groups_management/manage_users.html#change-credentials
+# Managing Users¶
+
+#-------------------------------------------------------------------------------------------------------------------------------#
+
