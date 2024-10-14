@@ -1,1 +1,40 @@
-....
+# * user must sudo priviliges
+# * Os must real not a docker or LXC
+
+1  sudo apt update  && sudo apt upgrade -y
+
+2  sudo apt install -y git
+3  sudo git clone https://git.openstack.org/openstack-dev/devstack.git
+4  cd devstack
+5  sudo nano local.conf
+      [[local|localrc]]
+    ADMIN_PASSWORD=password
+    DATABASE_PASSWORD=password
+    RABBIT_PASSWORD=password
+    SERVICE_PASSWORD=password
+    FLOATING_RANGE=192.168.1.0/24
+    HOST_IP=192.168.1.2  # server ip adr    
+6  ./stack.sh
+
+
+http://<HOST_IP>/dashboard
+
+
+
+7  source openrc
+ 
+OS_USERNAME
+OS_PASSWORD
+OS_PROJECT_NAME
+OS_AUTH_URL
+
+8 openstack service list
+
+---
+This is your host IP address: 87.98.249.178
+This is your host IPv6 address: ::1
+Horizon is now available at http://87.98.249.178/dashboard
+Keystone is serving at http://87.98.249.178/identity/
+The default users are: admin and demo
+The password: xxx
+
