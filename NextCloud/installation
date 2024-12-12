@@ -1,0 +1,61 @@
+#installation:
+$ sudo snap install nextcloud
+
+zadmin@zercloud:~$ sudo snap install nextcloud
+[sudo] password for zadmin:
+nextcloud 27.1.7snap1 from Nextcloud✓ installed
+
+
+#check:
+$ snap changes nextcloud
+zadmin@zercloud:~$ snap changes nextcloud
+ID   Status  Spawn               Ready               Summary
+4    Done    today at 20:29 UTC  today at 20:29 UTC  Install "nextcloud" snap
+
+
+#To see which connections this snap defines, enter the following:
+$snap connections nextcloud
+
+zadmin@zercloud:~$ snap connections nextcloud
+Interface        Plug                       Slot           Notes
+network          nextcloud:network          :network       -
+network-bind     nextcloud:network-bind     :network-bind  -
+network-observe  nextcloud:network-observe  -              -
+removable-media  nextcloud:removable-media  -              -
+
+
+1. Domain Yönlendirmesi için Nextcloud'da Trusted Domains Ayarı
+
+
+sudo nano /var/snap/nextcloud/current/nextcloud/config/config.php
+
+
+'trusted_domains' => 
+ array (
+    0 => '87.98.254.89',
+    1 => 'cloud.zercode.uk',
+  ),
+
+
+
+sudo snap restart nextcloud
+
+'trusted_domains' =>
+   [
+    'demo.example.org',
+    'otherdomain.example.org',
+    '10.111.112.113',
+    '[2001:db8::1]'
+  ],
+
+
+2. Web Sunucusunun SSL ve HTTP Ayarlarını Kontrol Edin
+
+sudo nextcloud.enable-https lets-encrypt  
+
+
+occ config:system:set trusted_domains 1 –value=<yourdomain.here>
+
+sudo snap restart nextcloud.apache
+
+

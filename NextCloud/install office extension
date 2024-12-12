@@ -1,0 +1,46 @@
+#######  Nextcloud Office  installation   ######
+
+cd /usr/share/keyrings && sudo wget https://collaboraoffice.com/downloads/gpg/collaboraonline-release-keyring.gpg
+
+# create 
+  
+ /etc/apt/sources.list.d/collaboraonline.sources 
+ 
+ 
+Types: deb
+URIs: https://www.collaboraoffice.com/repos/CollaboraOnline/CODE-deb
+Suites: ./
+Signed-By: /usr/share/keyrings/collaboraonline-release-keyring.gpg
+
+
+sudo apt update && sudo apt install coolwsd code-brand
+
+
+# Edit 
+
+ /etc/coolwsd/coolwsd.xml
+
+sudo systemctl restart coolwsd
+
+
+
+Full configuration examples for reverse proxy setup can be found in the Collabora Online documentation: https://sdk.collaboraonline.com/docs/installation/Proxy_settings.html
+
+sudo coolconfig set ssl.enable false
+sudo coolconfig set ssl.termination true
+sudo coolconfig set storage.wopi.host nextcloud.example.com
+sudo coolconfig set-admin-password
+sudo systemctl restart coolwsd
+systemctl status coolwsd
+
+
+sudo coolconfig set net.post_allow.host 10.0.0.4
+coolconfig update-system-template
+
+
+
+
+
+
+
+#######  Nextcloud Office -  end ######
