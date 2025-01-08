@@ -1,0 +1,41 @@
+## Checking installed Nextcloud
+sudo snap services nextcloud
+
+	sudo systemctl status snap.nextcloud.apache
+
+sudo snap start nextcloud
+sudo snap stop nextcloud
+sudo snap restart nextcloud
+
+
+sudo nextcloud.occ config:system:get trusted_domains
+
+sudo nextcloud.occ user:list
+		sudo nextcloud.occ user:add <username>
+
+sudo tail -f /var/snap/nextcloud/current/logs/apache_access.log
+sudo tail -f /var/snap/nextcloud/current/logs/apache_error.log
+
+
+
+
+
+sudo systemctl status snap.nextcloud.apache
+sudo systemctl status snap.nextcloud.mysql
+sudo systemctl status snap.nextcloud.redis-server
+sudo systemctl status snap.nextcloud.php-fpm
+
+
+/var/snap/nextcloud/common/nextcloud/data    # user data
+
+/var/snap/nextcloud/current/nextcloud/config/config.php  # conf fıles
+
+/var/snap/nextcloud/current/logs/
+
+
+
+sudo nextcloud.occ config:list   # to check default configs
+
+sudo snap refresh nextcloud
+
+
