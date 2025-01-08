@@ -1,12 +1,33 @@
 #installation:
+
+sudo apt update
+sudo apt install snapd
+
+snap version
+sudo snap install core
+sudo snap refresh core
+
+snap info nextcloud
+
 $ sudo snap install nextcloud
 
 zadmin@zercloud:~$ sudo snap install nextcloud
 [sudo] password for zadmin:
 nextcloud 27.1.7snap1 from Nextcloud✓ installed
-
+       latest/stable  snap install --stable nextcloud
+       29/stable      snap install --channel=29 nextcloud
+sudo snap install --stable nextcloud
+sudo snap install --channel=29  nextcloud  
+  
+	$ admin@cloudzercode:~$ sudo snap install --stable nextcloud
+	  nextcloud 30.0.4snap1 from Nextcloud✓ installed
 
 #check:
+sudo snap list nextcloud
+    $ admin@cloudzercode:~$ sudo snap list nextcloud
+		Name       Version      Rev    Tracking       Publisher   Notes
+		nextcloud  30.0.4snap1  45728  latest/stable  nextcloud✓  -
+
 $ snap changes nextcloud
 zadmin@zercloud:~$ snap changes nextcloud
 ID   Status  Spawn               Ready               Summary
@@ -58,4 +79,6 @@ occ config:system:set trusted_domains 1 –value=<yourdomain.here>
 
 sudo snap restart nextcloud.apache
 
+# to upgrade other version
 
+sudo snap refresh nextcloud --channel=stable/27
