@@ -1,3 +1,4 @@
+## https://c-nergy.be/blog/?p=18055
 #######  Nextcloud Office  installation   ######
 
 cd /usr/share/keyrings && sudo wget https://collaboraoffice.com/downloads/gpg/collaboraonline-release-keyring.gpg
