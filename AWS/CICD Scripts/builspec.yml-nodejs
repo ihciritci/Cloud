@@ -1,0 +1,38 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18 
+    commands:
+      - echo Installing dependencies...
+      - echo pwd
+      - cd  IDS.Common.URLShortener
+      - npm install 
+      - npm prune --production 
+      - npm dedupe
+
+  build:
+    commands:
+      - echo Building the Node.js project...
+      - cp ../Infrastructure/template.yml .
+      - npm run build        # --template  ../Infrastructure/template.yml 
+      - echo Creating zip package for deployment...
+      - zip -r function.zip /build/* /node_modules/ /src/ /IDS.Common.URLShortener/package.json /IDS.Common.URLShortener/package-lock.json -x "*.test.js" "*.spec.js" "/IDS.Common.URLShortener/node_modules/*/test/*"   
+  post_build:
+    commands:
+      - echo Post-build phase
+      - echo Deploying to AWS Lambda...
+      - echo "Deploying to dev region..."
+      - aws s3 cp function.zip s3://ids-lambda-functions-bucket/URLShortener/$(date +%Y%m%d%H%M)-function.zip 
+      - aws lambda update-function-code --function-name InlineServices-UrlShortener --s3-bucket ids-lambda-functions-bucket --s3-key URLShortener/$(date +%Y%m%d%H%M)-function.zip --qualifier dev
+        
+     # - aws s3 cp function.zip s3://inlineservices/URLShortener/$(date +%Y%m%d%H%M)-function.zip
+     
+     # - aws lambda update-function-code --function-name InlineServices-UrlShortener --s3-bucket inlineservices --s3-key URLShortener/$(date +%Y%m%d%H%M)-function.zip  ids-lambda-functions-bucket URLShortener
+      
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: 'IDS.Common.URLShortener'
