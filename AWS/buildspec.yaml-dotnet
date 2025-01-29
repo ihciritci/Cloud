@@ -1,0 +1,19 @@
+version: 0.1
+
+phases:
+  pre_build:
+    commands:
+      - echo Restore started on `date`
+      - dotnet restore "./MultiRegionDeployment/MultiRegionDeployment.csproj"
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - dotnet publish -c release -o ./build_output MultiRegionDeployment/MultiRegionDeployment.csproj
+
+artifacts:
+  discard-paths: yes
+  type: zip
+  name: MultiRegionDeployment
+  files:
+    - MultiRegionDeployment/build_output/**/*
