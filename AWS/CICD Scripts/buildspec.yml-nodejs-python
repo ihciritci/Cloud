@@ -1,0 +1,67 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+      python: 3.9
+    commands:
+      - echo "Installing Python dependencies..."
+      - cd IDS.Common.SFTPAuth
+      - python3 -m venv venv
+      - source venv/bin/activate
+      - pip install -r requirements.txt  # Python 
+
+      - echo "Installing Node.js dependencies..."
+      - cd ../IDS.Common.URLShortener
+      - npm install  
+      - npm prune --production  
+      - npm dedupe  
+      - echo "Installing Python dependencies..."
+ 
+  build:
+    commands:
+    
+      # Python Build 
+      - echo "Building Python project..."
+      - cd ../IDS.Common.SFTPAuth/src/
+      - pwd
+      - python3 SFTPAuthHandler.py         #setup.py install  # Python setup.py 
+      
+    
+      # Node.js Build 
+      - echo "Building Node.js project..."
+      - cd ../IDS.Common.URLShortener/
+      - pwd
+      - npm run build --template ../Infrastructure/template.yml  # Node.js build 
+      - ls -la build/ 
+
+      # Zip
+      - echo "Creating zip package for Node.js project..."
+      - cd ../IDS.Common.URLShortener
+      - pwd
+      - zip -r URLShortener.function.zip build/* dist/* src/ node_modules/ package.json package-lock.json -x "*.test.js" "*.spec.js" "node_modules/*/test/*"
+
+      - echo "Creating zip package for Python project..."
+      - cd ../IDS.Common.SFTPAuth
+      - pwd
+      - zip -r9 SFTPAuth.function.zip src/ venv/lib/python3.8/site-packages/ lambda_function.py  
+      
+  post_build:
+    commands:
+      - echo "Deploying Node.js project to Lambda..."
+      - aws s3 cp URLShortener.function.zip s3://ids-lambda-functions-bucket/URLShortener/$(date +%Y%m%d%H%M)-function.zip
+      - aws lambda update-function-code --function-name InlineServices-UrlShortener --s3-bucket ids-lambda-functions-bucket --s3-key URLShortener/$(date +%Y%m%d%H%M)-function.zip --qualifier dev
+
+      - echo "Deploying Python project to Lambda..."
+      - aws s3 cp SFTPAuth.function.zip s3://ids-lambda-functions-bucket/SFTPAuth/$(date +%Y%m%d%H%M)-function.zip
+      - aws lambda update-function-code --function-name InlineServices-SFTPAuth --s3-bucket ids-lambda-functions-bucket --s3-key SFTPAuth/$(date +%Y%m%d%H%M)-function.zip --qualifier dev
+artifacts:
+  files:
+    - '**/*' 
+  base-directory:  'IDS.Common.URLShortener'
+
+  secondary-artifacts:
+    - files:
+        - '**/*'
+      base-directory: 'IDS.Common.SFTPAuth'  
