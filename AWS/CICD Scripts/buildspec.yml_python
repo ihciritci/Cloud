@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt
+  pre_build:
+    commands:
+      - echo "Running linting checks..."
+      - pylint my_project/
+  build:
+    commands:
+      - echo "Running tests..."
+      - pytest tests/
+  post_build:
+    commands:
+      - echo "Tests completed successfully."
+
+artifacts:
+  files:
+    - my_project/**/*
+  discard-paths: yes
+  base-directory: my_project
