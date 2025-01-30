@@ -1,0 +1,49 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      ## dotnet: 8  
+      
+    commands:
+      - echo Installing dependencies...
+      - cd Inline-Administration-Portal
+      - dotnet restore
+     
+
+  build:
+    commands:
+      - echo Building the Node.js project...
+      - dotnet publish IA.Portal.API/IA.Portal.API.csproj
+      
+      - echo Creating zip package for deployment...
+      - cd IA.Portal.API 
+      - zip -r API_function.zip build/* node_modules/ src/ package.json package-lock.json -x "*.test.js" "*.spec.js" "node_modules/*/test/*"   
+      
+      - cd ../IA.Portal.Web
+      - dotnet publish IA.Portal.Web/IA.Portal.Web.csproj
+     # - zip -r portalweb_function.zip build/* node_modules/ src/ package.json package-lock.json -x "*.test.js" "*.spec.js" "node_modules/*/test/*"   
+      
+  post_build:
+    commands:
+      - echo Post-build phase
+      - echo Deploying to AWS Lambda...
+      - echo "Deploying to dev region..."
+      - aws s3 cp API_function.zip s3://ids-lambda-functions-bucket/IA-Portal-API/$(date +%Y%m%d%H%M)-function.zip 
+      - aws lambda update-function-code --function-name Inline-Administration-Portal-lambda1 --s3-bucket ids-lambda-functions-bucket --s3-key IA-Portal-API/$(date +%Y%m%d%H%M)-function.zip 
+
+      - cd ../IA.Portal.Web
+      
+      - aws s3 cp build/* s3://ids-lambda-functions-bucket/iaportalweb-dev/
+        
+    
+     
+     # - aws s3 cp function.zip s3://inlineservices/URLShortener/$(date +%Y%m%d%H%M)-function.zip
+     
+     # - aws lambda update-function-code --function-name InlineServices-UrlShortener --s3-bucket inlineservices --s3-key URLShortener/$(date +%Y%m%d%H%M)-function.zip  ids-lambda-functions-bucket URLShortener
+      
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: '.'
