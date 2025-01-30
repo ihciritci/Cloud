@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+      python: 3.12
+  pre_build:
+    commands:
+      - echo "Installing dependencies..."
+      - pip install --upgrade aws-sam-cli
+  build:
+    commands:
+      - echo "Building the SAM application..."
+      - cd Infrastructure
+      - sam build
+  post_build:
+    commands:
+      - echo "Deploying the SAM application..."
+      - sam deploy --config-file samconfig.dev.toml --no-execute-changeset
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: '.' 
