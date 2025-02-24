@@ -1,0 +1,27 @@
+version: 0.0
+os: linux
+files:
+  - source: /push/
+    destination: /var/www/html/
+permissions:
+  - object: /var/www/html
+    owner: www-data
+    group: www-data
+    mode: 755
+    type:
+      - directory
+      - file
+hooks:
+  AfterInstall:
+    - location: /bin/bash
+      timeout: 300
+      runas: root
+      commands:
+        - set -e
+        - echo "Uploading files to S3..."
+        - aws s3 cp /var/www/html/InlineAdmin.Client/wwwroot/ s3://inline-admin.prod.client --recursive --cache-control "max-age=0"
+        - aws s3 cp /var/www/html/InlineAdministration.Client/wwwroot/ s3://inline-admin.prod.managementclient --recursive --cache-control "max-age=0"
+        - echo "Invalidating CloudFront caches..."
+        - aws cloudfront create-invalidation --distribution-id EAY2MMW4GBJCK --paths "/*"
+        - aws cloudfront create-invalidation --distribution-id E3K8JBJDNCMRMV --paths "/*"
+        - echo "Deployment completed successfully!"

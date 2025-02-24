@@ -1,0 +1,118 @@
+version: 0.2
+phases:
+   install:
+    runtime-versions:
+      dotnet: 8.0
+    commands:
+      - echo install ok
+      - rm -rf $HOME/.dotnet/sdk/6.*
+      - rm -rf $HOME/.dotnet/shared/Microsoft.AspNetCore.App/6.*
+      - rm -rf $HOME/.dotnet/shared/Microsoft.NETCore.App/6.*
+      - echo "Installing .NET 8.0 SDK..."
+      - wget https://dot.net/v1/dotnet-install.sh
+      - chmod +x dotnet-install.sh
+      - ./dotnet-install.sh --version 8.0.100
+      - dotnet --list-sdks
+      - dotnet --list-runtimes
+      
+   build:
+     commands:
+      - echo Installing dependencies...
+      - dotnet --info
+     
+      - cd ..
+    #  - dnf update -y
+     # - dnf install awscli -y
+     # - apt install -y aspnetcore-runtime-8.0
+      - ls -al
+      
+      - mkdir build
+      - mkdir build/Inline-Administration-Management/
+      - echo $CODEBUILD_SRC_DIR
+      - echo $CODEBUILD_SRC_DIR_BackEndSrcArtifact
+      - mv  $CODEBUILD_SRC_DIR/* build/Inline-Administration-Management/  
+      - ls -al build/Inline-Administration-Management/  
+      - mkdir build/Inline-Administration-Backend/ 
+      - mv  $CODEBUILD_SRC_DIR_BackEndSrcArtifact/* build/Inline-Administration-Backend/
+ 
+     
+      - ls -al build/Inline-Administration-Backend/
+      - cd  build/
+      - chmod -R 777 *
+      - version_date=$(date '+%Y.%m.%d %H:%M:%S')
+      - echo ${version_date}
+      - version_textN=$(date '+%Y.%m.%d %H:%M:%S' | sed 's/^/version_/')
+      - echo ${version_textN}
+      - sed -i "s/VERSION_TEXT/${version_textN}_InlineAdministration.Client/g" Inline-Administration-Management/InlineAdministration.Client/wwwroot/index.html
+      - sed -i "s/VERSION_TEXT/${version_textN}_InlineAdmin.Client/g" Inline-Administration-Management/InlineAdmin.Client/wwwroot/index.html	    
+      - ls -al 
+      - echo "Build and  Restore process.........."
+     
+   
+      - echo $?
+      - dotnet --list-sdks
+      
+      - dotnet restore Inline-Administration-Management/InlineAdministration.sln 
+      - echo $?
+      
+      - echo "build 1"
+      - ls -al
+     
+      - dotnet build Inline-Administration-Management/InlineAdministration.sln --configuration Release  /p:configuration=Release
+      - echo $?
+      
+      - cd Inline-Administration-Management
+      - rm -rf push*
+      - mkdir -p push/InlineAdmin.Client
+      - mkdir -p push/InlineAdministration.Client
+     
+      - echo "postBuild process.........."
+      
+      - ls -al
+     
+      - ls -al
+      - dotnet publish InlineAdmin.Client/InlineAdmin.Client.csproj -c Release -o push/InlineAdmin.Client /p:configuration=Release
+      - echo $?
+      
+      - dotnet publish InlineAdministration.Client/InlineAdministration.Client.csproj -c Release -o push/InlineAdministration.Client /p:configuration=Release
+      - echo $?
+      - pwd
+      - cd ..
+      - pwd
+      - ls ./Inline-Administration-Management/push/InlineAdministration.Client/wwwroot/
+      - ls ./Inline-Administration-Management/push/InlineAdmin.Client/wwwroot/
+      
+#      - aws s3 cp ./Inline-Administration-Management/push/InlineAdmin.Client/wwwroot/ s3://inline-admin.prod.client --recursive --cache-control "max-age=0"      
+ #     - aws cloudfront get-distribution --id EAY2MMW4GBJCK
+  #    - aws cloudfront create-invalidation --distribution-id EAY2MMW4GBJCK --paths "/*"
+      
+      
+ #     - aws s3 cp ./Inline-Administration-Management/push/InlineAdministration.Client/wwwroot/ s3://inline-admin.prod.managementclient --recursive --cache-control "max-age=0"
+  #    - aws cloudfront get-distribution --id E3K8JBJDNCMRMV
+   #   - aws cloudfront create-invalidation --distribution-id E3K8JBJDNCMRMV --paths "/*"
+       
+      -  pwd
+       
+      - echo "Checking InlineAdministration.Client build output..."
+      - ls -al ../build/Inline-Administration-Management/push/InlineAdministration.Client/wwwroot/
+
+      - echo "Checking InlineAdmin.Client build output..."
+      - ls -al ../build/Inline-Administration-Management/push/InlineAdmin.Client/wwwroot/
+      
+     
+artifacts:
+  files:
+    - '**/*'              
+ 
+  base-directory: '../build/Inline-Administration-Management/push'
+  
+secondary-artifacts:
+  InlineAdministrationClient:
+    files:
+      - '**/*'
+    base-directory: '../build/Inline-Administration-Management/push/InlineAdministration.Client/wwwroot'
+
+  InlineAdminClient:
+    files:
+      - '**/*'
+    base-directory: '../build/Inline-Administration-Management/push/InlineAdmin.Client/wwwroot'
