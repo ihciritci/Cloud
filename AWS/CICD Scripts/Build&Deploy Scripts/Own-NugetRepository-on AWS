@@ -63,3 +63,10 @@ phases:
 artifacts:
   files:
     - '**/*.nupkg' 
+
+  name: 'inline-admin.codepipeline'
+  discard-paths: no
+  base-directory: '**/*.nupkg'
+  encryption-disabled: false  
+  s3-prefix: 'staging/IDS-NugetRepo-Staging-BuildArtifacts'
+  override-artifact-name: true
