@@ -1,0 +1,65 @@
+version: 0.2
+
+
+phases:
+  install:
+   runtime-versions:
+      dotnet: 8.0
+   commands:
+      - echo "Installing dependencies..."
+      - apt update
+      - apt install awscli -y
+      - export PATH="$PATH:/root/.dotnet/tools"
+      - dotnet tool install -g AWS.CodeArtifact.NuGet.CredentialProvider
+      - dotnet codeartifact-creds install
+  pre_build:
+   commands:
+      - aws sts get-caller-identity
+      - export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain inline-library --domain-owner 752183017428 --query authorizationToken --output text)
+      - echo "CodeArtifact Token Length:" ${#CODEARTIFACT_AUTH_TOKEN}
+      - ls -al
+      - pwd
+      - dotnet nuget list source
+     # - dotnet nuget add source "https://inline-library-752183017428.d.codeartifact.us-east-2.amazonaws.com/nuget/nuget-repo-prod/v3/index.json" -n "inline-library/nuget-repo-prod" --username "aws" --password "$CODEARTIFACT_AUTH_TOKEN" --store-password-in-clear-text
+     # - dotnet nuget list source
+      - aws codeartifact list-packages --domain inline-library --repository nuget-repo-prod
+      - dotnet nuget remove source "inline-library/nuget-repo" || true
+      - dotnet nuget add source $(aws codeartifact get-repository-endpoint --domain inline-library --domain-owner 752183017428 --repository nuget-repo-prod --format nuget --query repositoryEndpoint --output text)"v3/index.json" --name "inline-library/nuget-repo-prod" --username "aws" --password "$CODEARTIFACT_AUTH_TOKEN" --store-password-in-clear-text
+  
+  build:
+    commands:
+      - echo "Restoring, Building, and Packing IDS.Common.Extension..."
+      - dotnet restore IDS.Common.Extension/IDS.Common.Extension.csproj --source https://api.nuget.org/v3/index.json
+      - dotnet build IDS.Common.Extension/IDS.Common.Extension.csproj --configuration Release
+      - dotnet pack IDS.Common.Extension/IDS.Common.Extension.csproj --configuration Release --output ./packages
+
+      - echo "Adding IDS.Common.Extension package to local source..."
+      - mkdir -p ~/.nuget/packages
+      - dotnet nuget add source ./packages --name local-nuget
+      
+      - echo "Restoring, Building, and Packing IDS.Common.Cache..."
+      - dotnet restore IDS.Common.Cache/IDS.Common.Cache.csproj --source ./packages --source https://api.nuget.org/v3/index.json
+      - dotnet build IDS.Common.Cache/IDS.Common.Cache.csproj --configuration Release
+      - dotnet pack IDS.Common.Cache/IDS.Common.Cache.csproj --configuration Release --output ./packages
+
+      - echo "Restoring, Building, and Packing IDS.Common.S3..."
+      - dotnet restore IDS.Common.S3/IDS.Common.S3.csproj --source ./packages --source https://api.nuget.org/v3/index.json
+      - dotnet build IDS.Common.S3/IDS.Common.S3.csproj --configuration Release
+      - dotnet pack IDS.Common.S3/IDS.Common.S3.csproj --configuration Release --output ./packages
+
+      - echo "Restoring, Building, and Packing IDS.Common.Helper..."
+      - dotnet restore IDS.Common.Helper/IDS.Common.Helper.csproj --source ./packages --source https://api.nuget.org/v3/index.json
+      - dotnet build IDS.Common.Helper/IDS.Common.Helper.csproj --configuration Release
+      - dotnet pack IDS.Common.Helper/IDS.Common.Helper.csproj --configuration Release --output ./packages  
+      
+  post_build:
+    commands:
+     
+       - dotnet nuget push "./packages/*.nupkg" --source "inline-library/nuget-repo-prod" --skip-duplicate
+      
+       - echo "Build completed successfully!"
+     
+
+artifacts:
+  files:
+    - '**/*.nupkg' 
