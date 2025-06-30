@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.2",
+  "description": "Install and configure CloudWatch Agent on Windows EC2 instances",
+  "parameters": {
+    "commands": {
+      "type": "StringList",
+      "description": "Commands to install CloudWatch Agent, write config, and start agent.",
+      "default": [
+        "$agentPath = 'C:\\Program Files\\Amazon\\AmazonCloudWatchAgent\\amazon-cloudwatch-agent.exe'",
+        "if (!(Test-Path $agentPath)) {",
+        "  Write-Output 'CloudWatch Agent not found. Installing...'",
+        "  $msiUrl = 'https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/amazon-cloudwatch-agent.msi'",
+        "  $msiPath = 'C:\\Temp\\amazon-cloudwatch-agent.msi'",
+        "  Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath",
+        "  Start-Process msiexec.exe -ArgumentList \"/i $msiPath /qn\" -Wait",
+        "  Remove-Item $msiPath",
+        "} else { Write-Output 'CloudWatch Agent is already installed.' }",
+        "",
+        "# Config dosyası oluşturuluyor",
+        "$configPath = 'C:\\Program Files\\Amazon\\AmazonCloudWatchAgent\\config.json'",
+        "$configJson = '{\"metrics\":{\"metrics_collected\":{\"LogicalDisk\":{\"measurement\":[\"% Free Space\",\"Free Megabytes\"],\"resources\":[\"*\"]},\"Memory\":{\"measurement\":[\"Available MBytes\"]}},\"append_dimensions\":{\"InstanceId\":\"${aws:InstanceId}\"},\"aggregation_dimensions\":[[\"InstanceId\"]]}}'",
+        "Set-Content -Path $configPath -Value $configJson -Force",
+        "Write-Output 'CloudWatch config.json created.'",
+        "",
+        "# Agent başlatılıyor",
+        "& \"$agentPath\" -config \"$configPath\" -start",
+        "Write-Output 'CloudWatch Agent started with new config.'"
+      ],
+      "displayType": "textarea"
+    },
+    "workingDirectory": {
+      "type": "String",
+      "default": "C:\\",
+      "description": "The path to the working directory on your instance."
+    },
+    "executionTimeout": {
+      "type": "String",
+      "default": "3600",
+      "description": "Command execution timeout in seconds."
+    }
+  },
+  "runtimeConfig": {
+    "aws:runPowerShellScript": {
+      "properties": [
+        {
+          "id": "0.aws:runPowerShellScript",
+          "runCommand": "{{ commands }}",
+          "workingDirectory": "{{ workingDirectory }}",
+          "timeoutSeconds": "{{ executionTimeout }}"
+        }
+      ]
+    }
+  }
+}
