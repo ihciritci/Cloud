@@ -1,0 +1,67 @@
+<powershell>
+$ErrorActionPreference = "Stop"
+
+
+############## 1. CloudWatchAgent  ##############
+
+
+Write-Output "Starting CloudWatch Agent installation..."
+
+$msiUrl = "https://amazoncloudwatch-agent.s3.amazonaws.com/windows/amd64/latest/amazon-cloudwatch-agent.msi"
+$msiPath = "C:\\amazon-cloudwatch-agent.msi"
+
+Invoke-WebRequest -Uri $msiUrl -OutFile $msiPath
+Start-Process msiexec.exe -ArgumentList "/i `"$msiPath`" /qn" -Wait
+Remove-Item $msiPath
+
+#config.json (RAM + Disc)
+$configJson = '{
+  "metrics": {
+    "metrics_collected": {
+      "LogicalDisk": {
+        "measurement": ["% Free Space", "Free Megabytes"],
+        "resources": ["*"]
+      },
+      "Memory": {
+        "measurement": ["Available MBytes"]
+      }
+    },
+    "append_dimensions": {
+      "InstanceId": "${aws:InstanceId}"
+    },
+    "aggregation_dimensions": [["InstanceId"]]
+  }
+}'
+
+$configPath = "C:\\Program Files\\Amazon\\AmazonCloudWatchAgent\\config.json"
+Set-Content -Path $configPath -Value $configJson -Force
+
+
+& "C:\\Program Files\\Amazon\\AmazonCloudWatchAgent\\amazon-cloudwatch-agent-ctl.ps1" -a fetch-config -m ec2 -c file:"$configPath" -s
+
+Write-Output "CloudWatch Agent installed and started."
+
+
+############ 2. Qualys Agent  ###########
+
+
+Write-Output "Starting Qualys Agent installation..."
+
+#$qualysInstallerUrl = "https://qagpublic.qg2.apps.qualys.com/cloud-agent/QualysCloudAgent.exe"
+$qualysInstallerUrl = "https://s3.us-east-2.amazonaws.com/ids.devops.tools/QualysCloudAgent.exe"
+
+$installerPath = "C:\\QualysCloudAgent.exe"
+
+
+$activationId = "{63c95xxxxxxd6}"
+$customerId = "{8e6dd6xxxxx972636}"
+$webService = "https://qagpublic.qg4.apps.qualys.com/CloudAgent/"
+
+Invoke-WebRequest -Uri $qualysInstallerUrl -OutFile $installerPath
+
+$argList = "CustomerId=$customerId ActivationId=$activationId WebServiceUri=$webService"
+Start-Process -FilePath "C:\\QualysCloudAgent.exe" -ArgumentList $argList -Wait
+Start-Service QualysCloudAgent
+
+Write-Output "Qualys Agent installed and started."
+</powershell>
